@@ -11,6 +11,7 @@ import com.springcourse.springcourse.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,7 @@ public class UserResource {
     @Autowired
     private JwtManager jwtManager;
 
+    @Secured({"ROLE_ADMINISTRATOR"})
     @PostMapping
     public ResponseEntity<User> save(@RequestBody @Valid UserSaveDTO userDTO) {
         User userToSave = userDTO.transformToUser();
@@ -61,7 +63,7 @@ public class UserResource {
     @GetMapping
     public ResponseEntity<PageModel<User>> listAll(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size){
+            @RequestParam(value = "size", defaultValue = "10") int size) {
         PageRequestModel pr = new PageRequestModel(page, size);
         PageModel<User> pm = userService.listAllOnLazyModel(pr);
         return ResponseEntity.ok(pm);
@@ -83,7 +85,7 @@ public class UserResource {
 
     @GetMapping("/{id}/requests")
     public ResponseEntity<PageModel<Request>> listAllRequestById(
-            @PathVariable (name = "id") Long id,
+            @PathVariable(name = "id") Long id,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         PageRequestModel pr = new PageRequestModel(page, size);
@@ -91,9 +93,10 @@ public class UserResource {
         return ResponseEntity.ok(pm);
     }
 
+    @Secured({"ROLE_ADMINISTRATOR"})
     @PatchMapping("/role/{id}")
     public ResponseEntity<?> updateRole(
-            @PathVariable (name = "id") Long id,
+            @PathVariable(name = "id") Long id,
             @RequestBody @Valid UserUpdateRoleDTO userDTO) {
         User user = new User();
         user.setId(id);
