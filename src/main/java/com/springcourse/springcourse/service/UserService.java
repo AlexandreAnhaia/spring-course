@@ -1,16 +1,16 @@
 package com.springcourse.springcourse.service;
 
-import com.springcourse.springcourse.domain.Enumeration.Role;
 import com.springcourse.springcourse.domain.User;
 import com.springcourse.springcourse.exception.NotFoundException;
 import com.springcourse.springcourse.model.PageModel;
 import com.springcourse.springcourse.model.PageRequestModel;
 import com.springcourse.springcourse.repository.UserRepository;
 import com.springcourse.springcourse.service.util.HashUtil;
+import com.springcourse.springcourse.specification.UserSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,8 +53,11 @@ public class UserService implements UserDetailsService {
     }
 
     public PageModel<User> listAllOnLazyModel(PageRequestModel pr) {
-        Pageable pageable = PageRequest.of(pr.getPage(), pr.getSize());
-        Page<User> page = userRepository.findAll(pageable);
+        Pageable pageable = pr.toSpringPageRequest();
+
+        Specification<User> userSpecification = UserSpecification.search(pr.getSearch());
+
+        Page<User> page = userRepository.findAll(userSpecification, pageable);
 
         PageModel<User> pm = new PageModel<>((int)page.getTotalElements(), page.getSize(), page.getTotalPages(), page.getContent());
         return pm;

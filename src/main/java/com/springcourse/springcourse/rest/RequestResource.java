@@ -11,10 +11,11 @@ import com.springcourse.springcourse.service.RequestStageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(value = "requests")
@@ -33,6 +34,7 @@ public class RequestResource {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRequest);
     }
 
+    @PreAuthorize("@accessManager.isRequestOwner(#id)")
     @PutMapping("/{id}")
     public ResponseEntity<Request> update(@PathVariable(name = "id") Long id, @RequestBody @Valid RequestUpdateDTO requestUpdateDTO) {
         Request request = requestUpdateDTO.transformToRequest();
@@ -48,21 +50,17 @@ public class RequestResource {
     }
 
     @GetMapping
-    public ResponseEntity<PageModel<Request>> listAll(
-            @PathVariable (name = "id") Long id,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
-        PageRequestModel pr = new PageRequestModel(page, size);
-        PageModel<Request> pm = requestService.listAllByOwnerIdOnLazyModel(id, pr);
+    public ResponseEntity<PageModel<Request>> listAll(@RequestParam Map<String, String> params) {
+        PageRequestModel pr = new PageRequestModel(params);
+        PageModel<Request> pm = requestService.listAllOnLazyModel(pr);
         return ResponseEntity.ok(pm);
     }
 
     @GetMapping("/{id}/request-stages")
     public ResponseEntity<PageModel<RequestStage>> listAllStagesById(
             @PathVariable(name = "id") Long id,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size) {
-        PageRequestModel pr = new PageRequestModel(page, size);
+            @RequestParam Map<String, String> params) {
+        PageRequestModel pr = new PageRequestModel(params);
         PageModel<RequestStage> pm = requestStageService.listAllByRequestIdOnLazyModel(id, pr);
         return ResponseEntity.ok(pm);
     }
